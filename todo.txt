@@ -1,0 +1,4 @@
+
+todo list: 
+1) add write out functions
+2) function to get a diescription of the data blocks
