@@ -115,15 +115,67 @@ class StarFile():
         for i in loop_data:
             array = np.array(loop_data[i])
             self.data[i] = pd.DataFrame(array, columns=loop_headers[i])
+
                 
-            
-            
-            
-            
-            
-            
-            
-            
+    def write_out(self, out_name, fields=False):
+
+        '''
+        A simple write out function
+
+        Parameters: 
+        -----------
+
+        out_name : str
+            The name of the file you would like to write out to
+
+        fields : false or list
+            If false all data_blocks will be written out. If a list 
+            is passed then only the datablocks in the list will be written out
+        '''
+
+        
+        def write_simple_block(dict_, file):
+
+            '''
+            Write a dictionary to the star file
+            '''    
+
+            for i in dict_:
+                val = str(dict_[i])
+                file.write('%s     %s\n'%(i, val))
+
+        def write_tabular_data(dataframe, file):
+
+            f.write('loop_\n')
+            for i in dataframe.columns:
+                f.write(i+'\n')
+
+            lines = dataframe.to_csv(index=False, header=False)
+            lines = lines.replace(',', '     ')
+            file.write(lines)
+        
+        f = open(out_name, 'w')
+        f.write('# This file was written by StarPy\n\n')
+
+        if fields == False:
+
+            for i in self.data:
+
+                f.write(i+'\n\n')
+
+                if type(self.data[i]) == dict:
+                    write_simple_block(self.data[i], f)
+
+                if type(self.data[i]) == pd.DataFrame:
+                    write_tabular_data(self.data[i], f)
+
+                f.write('\n\n')
+
+        f.close()
+
+        
+        
+    
             
             
             
