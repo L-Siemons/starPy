@@ -231,7 +231,11 @@ class StarFile():
         This function writes out two star files where a databloack has been split 
         into two halfs using a feature in the datablock/pandas array. 
 
-        This could be useful for splitting 
+        This could be useful for splitting tomograms. 
+
+        The two halfs are written into star files ending in 'half1(2).star' and the total star 
+        file is written out to a file with '_total.star' as the ending. Note this changes the _rlnRandomSubset
+        flag accordingly.
 
         Parameters: 
         -----------
@@ -242,7 +246,7 @@ class StarFile():
         field : str 
             the pandas colomn you want to use to split the data. 
 
-        random : boolea
+        random : boolean
             True means that the tomograms get shuffled before splitting
         '''
     
@@ -262,14 +266,18 @@ class StarFile():
                 list2.append(item)
 
         print('writing half 1')
-        self.data[data_block] = original[original[field].isin(list1)]
+        half1 = original[original[field].isin(list1)].assign(_rlnRandomSubset=1)
+        self.data[data_block] = half1
         self.write_out(self.file_name.split('.')[0]+'_half1.star')
 
         print('writing half 2')
-        self.data[data_block] = original[original[field].isin(list2)]
+        half2 = original[original[field].isin(list2)].assign(_rlnRandomSubset=2)
+        self.data[data_block] = half2
         self.write_out(self.file_name.split('.')[0]+'_half2.star')
 
-        self.data[data_block] = original
+        print('writing total')
+        self.data[data_block] = pd.concat([half1,half2])
+        self.write_out(self.file_name.split('.')[0]+'_total.star')        
 
             
             
