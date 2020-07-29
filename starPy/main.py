@@ -5,6 +5,8 @@ This is the main module containing the class that represents the star file
 
 import numpy as np 
 import pandas as pd 
+import copy
+import random as r
 
 class StarFile():
     
@@ -171,13 +173,104 @@ class StarFile():
 
                 f.write('\n\n')
 
+        else:
+            print('this option is not implimented yet ... Please remind me to do it!')
+
         f.close()
 
-        
-        
+    def select_random_data(self, data_block, removal_percent):
+        '''
+        This function can be used to remove a random percentage of the 
+        rows in tabular data
+
+        Parameters: 
+        -----------
+
+        data_block : str
+            Name of the data_block we want to reduce 
+
+        removal_percent : float 
+            float between 0 and 1 that is the percent we want to remove
+        '''
+
+        # check its a dataframe
+        assert type(self.data[data_block]) == pd.DataFrame
+
+        rows_number = int((self.data[data_block].shape[0])*(1 - removal_percent))
+        self.data[data_block] = self.data[data_block].sample(n=rows_number)
+
+    def write_out_chunks(self, chunk_length, data_block):
+        '''
+        This function takes a data block and writes star files with N lines 
+        in that data block. Note that other information in the star file is not written out 
+
+        Parameters: 
+        -----------
+
+        chunk_length : int
+            How many lines in the data block 
+
+        data_block : str
+            Name of the data_block we want to reduce 
+        '''
+
+        original = copy.copy(self.data[data_block])
+
+        lst = [self.data[data_block].iloc[i:i+chunk_length] for i in range(0,len(self.data[data_block])-chunk_length+1,chunk_length)]
+
+        for indx, i in enumerate(lst):
+
+            self.data[data_block] = i 
+            self.write_out(self.file_name.split('.')[0]+'_%i.star'%(indx))
+
+        self.data[data_block] = original
+
+    def half_field(self, data_block, field, random=False):
+
+        '''
+        This function writes out two star files where a databloack has been split 
+        into two halfs using a feature in the datablock/pandas array. 
+
+        This could be useful for splitting 
+
+        Parameters: 
+        -----------
+
+        data_block : str
+            Name of the data_block we want to reduce 
+
+        field : str 
+            the pandas colomn you want to use to split the data. 
+
+        random : boolea
+            True means that the tomograms get shuffled before splitting
+        '''
     
-            
-            
+        original = copy.copy(self.data[data_block])
+        headers = list(set(self.data[data_block][field]))
+
+        if random == True:
+            headers = r.shuffle(headers)
+
+        list1 = []
+        list2 = []
+
+        for indx, item in enumerate(headers):
+            if (indx %2) == 0:
+                list1.append(item)
+            else:
+                list2.append(item)
+
+        print('writing half 1')
+        self.data[data_block] = original[original[field].isin(list1)]
+        self.write_out(self.file_name.split('.')[0]+'_half1.star')
+
+        print('writing half 2')
+        self.data[data_block] = original[original[field].isin(list2)]
+        self.write_out(self.file_name.split('.')[0]+'_half2.star')
+
+        self.data[data_block] = original
+
             
             
             
